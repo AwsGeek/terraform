@@ -1,0 +1,93 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "AWSGeek-VPC",
+	"Parameters" : {
+		"BucketPath" : {
+			"Description": "Path to template files",
+			"Type": "String"
+		},
+		"AvailabilityZones" : {
+			"Description": "Comma separated list of availability zones, 1 or 2 as spec'd above",
+			"Type": "CommaDelimitedList"
+		},	
+		"VpcCidrBlock" : {
+			"Description": "CIDR block for the VPC",
+			"Type": "String"
+		},
+		"PublicCidrBlocks" : {
+			"Description": "CIDR blocks for the public subnets (2 max)",
+			"Type": "CommaDelimitedList"
+		},
+		"PrivateCidrBlocks" : {
+			"Description": "CIDR blocks for the private subnets (2 max)",
+			"Type": "CommaDelimitedList"
+		}
+	},
+	"Resources" : {
+		"VPC" : {
+			"Type" : "AWS::EC2::VPC",
+			"Properties" : {
+				"CidrBlock" : {"Ref" : "VpcCidrBlock" },
+				"EnableDnsHostnames" : "true",
+				"Tags": [
+				]				
+			}
+		},
+		"InternetGateway" : {
+			"Type" : "AWS::EC2::InternetGateway",
+			"Properties" : {
+				"Tags": [
+				]				
+			}
+		},
+		"GatewayAttachment" : {
+			"Type" : "AWS::EC2::VPCGatewayAttachment",
+			"Properties" : {
+				"VpcId" : { "Ref" : "VPC" },
+				"InternetGatewayId" : { "Ref" : "InternetGateway" }
+			}
+		},
+        "AZ1" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+                                "TemplateURL" : { "Fn::Join" : ["", ["http://s3.amazonaws.com/",{ "Ref" : "BucketPath" }, "/az.json"]]},
+				"Parameters" : {
+					"VPC" : { "Ref" : "VPC" },
+					"InternetGateway" : { "Ref" : "InternetGateway" },
+					"PublicCidrBlock" : { "Fn::Select" : [ "0", {"Ref" : "PublicCidrBlocks"} ] },
+					"PrivateCidrBlock" : { "Fn::Select" : [ "0", {"Ref" : "PrivateCidrBlocks"} ] },
+					"AvailabilityZone" : { "Fn::Select" : [ "0", {"Ref" : "AvailabilityZones"} ] }
+				}
+			}
+        },		
+        "AZ2" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+                                "TemplateURL" : { "Fn::Join" : ["", ["http://s3.amazonaws.com/",{ "Ref" : "BucketPath" }, "/az.json"]]},
+				"Parameters" : {
+					"VPC" : { "Ref" : "VPC" },
+					"InternetGateway" : { "Ref" : "InternetGateway" },
+					"PublicCidrBlock" : { "Fn::Select" : [ "1", {"Ref" : "PublicCidrBlocks"} ] },
+					"PrivateCidrBlock" : { "Fn::Select" : [ "1", {"Ref" : "PrivateCidrBlocks"} ] },
+					"AvailabilityZone" : { "Fn::Select" : [ "1", {"Ref" : "AvailabilityZones"} ] }
+				}
+			}
+        }				
+	},
+	"Outputs" : {
+		"VPC" : {
+			"Description" : "ID of the VPC",
+			"Value" :  { "Ref" : "VPC" }
+		},
+		"PublicSubnets" : {
+			"Description" : "Public subnet IDs",
+			"Value" : { "Fn::Join" : [",",[{ "Fn::GetAtt" : [ "AZ1" , "Outputs.PublicSubnet" ] },{ "Fn::GetAtt" : [ "AZ2" , "Outputs.PublicSubnet" ] }]]}
+		},
+		"PrivateSubnets" : {
+			"Description" : "Private subnet IDs",
+			"Value" : { "Fn::Join" : [",",[{ "Fn::GetAtt" : [ "AZ1" , "Outputs.PrivateSubnet" ] },{ "Fn::GetAtt" : [ "AZ2" , "Outputs.PrivateSubnet" ] }]]}
+			
+				
+		}
+	}
+}

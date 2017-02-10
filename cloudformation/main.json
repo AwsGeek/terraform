@@ -1,0 +1,45 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "AWSGeek",
+  "Parameters" : {
+    "BucketPath" : {
+      "Description": "Path to template files",
+      "Type": "String"
+    },
+    "KeyName" : {
+      "Description" : "The name of the keypair used to connect to EC2 instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName"
+    },	
+    "AvailabilityZones" : {
+      "Description": "The availability zones to be used (select 2)",
+      "Type": "String"
+    },
+    "VpcCidrBlock" : {
+      "Description": "CIDR block for VPC",
+      "Type": "String"
+    },
+    "PublicCidrBlocks" : {
+      "Description": "CIDR blocks for public subnets",
+      "Type": "String"
+    },
+    "PrivateCidrBlocks" : {
+      "Description": "CIDR blocks for private subnets",
+      "Type": "String"
+    }
+  },
+  "Resources" : {
+    "VPC" : {
+     "Type" : "AWS::CloudFormation::Stack",
+       "Properties" : {
+         "TemplateURL" : { "Fn::Join" : ["", ["http://s3.amazonaws.com/",{ "Ref" : "BucketPath" }, "/vpc.json"]]},
+         "Parameters" : {
+           "BucketPath" : { "Ref" : "BucketPath" },
+           "VpcCidrBlock" : { "Ref" : "VpcCidrBlock" },
+           "PublicCidrBlocks" : { "Ref" : "PublicCidrBlocks" },
+           "PrivateCidrBlocks" : { "Ref" : "PrivateCidrBlocks" },
+           "AvailabilityZones" : { "Ref" : "AvailabilityZones" }
+         }
+       }
+    }
+  }
+}

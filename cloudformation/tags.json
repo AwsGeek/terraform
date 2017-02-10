@@ -1,0 +1,15 @@
+[
+  { 
+    "Key" : "Product",
+    "Value" : "Terraformed"
+  },
+  {
+    "Key" : "Environment",
+    "Value" : "Production" 
+  },
+  {
+    "Key" : "Developer",
+    "Value" : "@awsgeek" 
+  }
+]
+
